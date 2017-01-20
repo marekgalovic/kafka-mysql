@@ -26,7 +26,7 @@ func NewConfig() *Config {
     },
     ConnectionTimeout: 1,
     UpsertInterval: 2000,
-    UpsertSize: 1000,
+    UpsertSize: 4000,
     MaxRetries: 3,
   }
 }
@@ -84,13 +84,13 @@ func (c *Config) ParseFlags() {
   flag.StringVar(&c.FieldList, "fields", "", "Event fields to import")
   flag.StringVar(&c.Mysql.Host, "mysql-host", "127.0.0.1", "Mysql host")
   flag.IntVar(&c.Mysql.Port, "mysql-port", 3306, "Mysql host")
-  flag.StringVar(&c.Mysql.User, "mysql-user", "", "Mysql user")
+  flag.StringVar(&c.Mysql.User, "mysql-user", "root", "Mysql user")
   flag.StringVar(&c.Mysql.Password, "mysql-password", "", "Mysql password")
   flag.StringVar(&c.Mysql.Database, "mysql-database", "", "Mysql database")
   flag.StringVar(&c.Mysql.Table, "mysql-table", "", "Mysql table")
   flag.IntVar(&c.ConnectionTimeout, "timeout", 1, "Connection timeout")
-  flag.IntVar(&c.UpsertInterval, "upsert-interval", 1000, "Time to wait before next upsert - miliseconds")
-  flag.IntVar(&c.UpsertSize, "upsert-size", 1, "Number of events to upsert in one query")
+  flag.IntVar(&c.UpsertInterval, "upsert-interval", 2000, "Time to wait before next upsert - milliseconds")
+  flag.IntVar(&c.UpsertSize, "upsert-size", 4000, "Number of events to upsert in one query")
   flag.IntVar(&c.MaxRetries, "max-retries", 3, "Retry count before skipping to next batch")
   flag.Parse()
   c.Parse()

@@ -8,9 +8,11 @@ go:
 services:
   - docker
 
-before_install:
+before_script:
+  - sudo /etc/init.d/mysql stop
   - docker-compose pull
-  - docker-compose start
+  - docker-compose up -d
 
 script:
+  - go get -t -d -v ./...
   - make test
