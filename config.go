@@ -13,8 +13,21 @@ var Logger = log.New(os.Stdout, "[kafka-mysql] ", log.Flags())
 
 func NewConfig() *Config {
   return &Config{
-    Mysql: &MysqlConfig{},
-    Kafka: &KafkaConfig{},
+    Mysql: &MysqlConfig{
+      Host: "127.0.0.1",
+      Port: 3306,
+      User: "root",
+    },
+    Kafka: &KafkaConfig{
+      Brokers: []string{"127.0.0.1:9092"},
+      Zookeepers: []string{"127.0.0.1:2181"},
+      Topics: []string{""},
+      FetchSize: 1048576,
+    },
+    ConnectionTimeout: 1,
+    UpsertInterval: 2000,
+    UpsertSize: 1000,
+    MaxRetries: 3,
   }
 }
 
@@ -55,14 +68,13 @@ type Config struct {
 }
 
 func (c *Config) Parse() {
-  c.parseCliFlags()
   c.Kafka.Brokers = strings.Split(c.BrokerList, ",")
   c.Kafka.Zookeepers = strings.Split(c.ZookeeperList, ",")
   c.Kafka.Topics = strings.Split(c.TopicList, ",")
   c.Fields = strings.Split(c.FieldList, ",")
 }
 
-func (c *Config) parseCliFlags() {
+func (c *Config) ParseFlags() {
   flag.StringVar(&c.BrokerList, "brokers", "127.0.0.1:9092", "Kafka brokers")
   flag.StringVar(&c.ZookeeperList, "zookeepers", "127.0.0.1:2181", "Zookeeper nodes")
   flag.StringVar(&c.TopicList, "topics", "", "Kafka topics")
@@ -81,4 +93,5 @@ func (c *Config) parseCliFlags() {
   flag.IntVar(&c.UpsertSize, "upsert-size", 1, "Number of events to upsert in one query")
   flag.IntVar(&c.MaxRetries, "max-retries", 3, "Retry count before skipping to next batch")
   flag.Parse()
+  c.Parse()
 }

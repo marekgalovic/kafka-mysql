@@ -33,7 +33,7 @@ func (l *Loader) init() error {
   return nil
 }
 
-func (l *Loader) Upsert(rows [][]interface{}) (int64, error) {
+func (l *Loader) Upsert(rows []map[string]interface{}) (int64, error) {
   query := fmt.Sprintf(
     `INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s`,
     l.config.Mysql.Table,
@@ -81,10 +81,15 @@ func (l *Loader) rowPlaceholders() string {
   return fmt.Sprintf("(%s)", values[0:len(values)-1])
 }
 
-func (l *Loader) values(rows [][]interface{}) []interface{} {
+func (l *Loader) values(rows []map[string]interface{}) []interface{} {
   values := []interface{}{}
   for _, row := range rows {
-    values = append(values, row...)
+    var rowValues []interface{}
+    for _, field := range l.config.Fields {
+      rowValues = append(rowValues, row[field])
+    }
+    Logger.Println(rowValues)
+    values = append(values, rowValues...)
   }
   return values
 }
