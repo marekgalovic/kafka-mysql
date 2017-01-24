@@ -6,7 +6,7 @@ This package simplifies loading kafka events into mysql compliant databases. You
 ./kafka-mysql --brokers=127.0.0.1:9092,127.0.0.2:9092 --group=test-consumer --topics=topic_a --fields=field_a,field_b --mysql-database=test --mysql-table=test_data
 ```
 ### Options
-- **- -brokers** List of kafka brokers, default: `127.0.0.1:9092`
+- **- -brokers** List of kafka brokers
 - **- -zookeepers** List of zookeeper nodes (used to fetch kafka brokers if thery are not specified with --brokers parameter), default: `127.0.0.1:2181`
 - **- -group** Consumer group name
 - **- -topics** List of kafka topics

@@ -1,6 +1,10 @@
 package main
 
 import (
+  "os";
+  "syscall";
+  "os/signal";
+
   "github.com/marekgalovic/kafka-mysql"
 )
 
@@ -33,4 +37,13 @@ func main() {
     kafkamysql.Logger.Printf("Affected rows: %d", rowsAffected)
     return nil
   })
+
+  wait := make(chan os.Signal, 1)
+  signal.Notify(wait, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+  <- wait
+
+  err = consumer.Close()
+  if err != nil {
+    kafkamysql.Logger.Printf("Failed to close consumer: %v", err)
+  }
 }

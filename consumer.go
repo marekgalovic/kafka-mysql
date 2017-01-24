@@ -85,21 +85,40 @@ func (c *Consumer) initialOffset() int64 {
   return sarama.OffsetNewest
 }
 
-func (c *Consumer) Batches(handler func([][]byte) error) {
-  c.updateNextFlushTimestamp()
-  for message := range c.consumer.Messages() {
-    c.batchMessages = append(c.batchMessages, message.Value)
-    c.consumer.MarkOffset(message, "")
-    if c.shouldFlush() {
-      err := c.handleWithRetries(handler)
-      if err != nil {
-        Logger.Printf("Batch skipped because handler error occured: %v", err)
-      }
-      c.consumer.CommitOffsets()
-      Logger.Printf("Commited offset - topic: %s, partition: %d, offset: %d", message.Topic, message.Partition, message.Offset + 1)
-      c.resetBatch()
+func (c *Consumer) logErrors() {
+  for err := range c.consumer.Errors() {
+    Logger.Printf("Consumer error: %v", err)
+  }
+}
+
+func (c *Consumer) logNotifications() {
+  for notification := range c.consumer.Notifications() {
+    Logger.Println("REBALANCED")
+    for topic, partitions := range notification.Current {
+      Logger.Printf("Topic: %s, partitions: %v", topic, partitions)
     }
   }
+}
+
+func (c *Consumer) Batches(handler func([][]byte) error) {
+  go c.logErrors()
+  go c.logNotifications()
+  go func() {
+    c.updateNextFlushTimestamp()
+    for message := range c.consumer.Messages() {
+      c.batchMessages = append(c.batchMessages, message.Value)
+      c.consumer.MarkOffset(message, "")
+      if c.shouldFlush() {
+        err := c.handleWithRetries(handler)
+        if err != nil {
+          Logger.Printf("Batch skipped because handler error occured: %v", err)
+        }
+        c.consumer.CommitOffsets()
+        Logger.Printf("Commited offset - topic: %s, partition: %d, offset: %d", message.Topic, message.Partition, message.Offset + 1)
+        c.resetBatch()
+      }
+    }
+  }()
 }
 
 func (c *Consumer) handleWithRetries(handler func([][]byte) error) error {
@@ -131,6 +150,6 @@ func (c *Consumer) resetBatch() {
   c.batchMessages = nil
 }
 
-func (c *Consumer) Close() {
-  c.consumer.Close()
+func (c *Consumer) Close() error {
+  return c.consumer.Close()
 }

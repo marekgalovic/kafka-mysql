@@ -21,7 +21,6 @@ func NewConfig() *Config {
       User: "root",
     },
     Kafka: &KafkaConfig{
-      Brokers: []string{"127.0.0.1:9092"},
       Zookeepers: []string{"127.0.0.1:2181"},
       Topics: []string{""},
       FetchSize: 1048576,
@@ -71,7 +70,9 @@ type Config struct {
 }
 
 func (c *Config) parse() {
-  c.Kafka.Brokers = strings.Split(c.brokerList, ",")
+  if c.brokerList != "" {
+    c.Kafka.Brokers = strings.Split(c.brokerList, ",")
+  }
   c.Kafka.Zookeepers = strings.Split(c.zookeeperList, ",")
   c.Kafka.Topics = strings.Split(c.topicList, ",")
   c.Fields = strings.Split(c.fieldList, ",")
@@ -91,7 +92,7 @@ func (c *Config) load() error {
 
 func (c *Config) ParseFlags() error {
   flag.StringVar(&c.ConfigFile, "conf", "", "Config file")
-  flag.StringVar(&c.brokerList, "brokers", "127.0.0.1:9092", "Kafka brokers")
+  flag.StringVar(&c.brokerList, "brokers", "", "Kafka brokers")
   flag.StringVar(&c.zookeeperList, "zookeepers", "127.0.0.1:2181", "Zookeeper nodes")
   flag.StringVar(&c.topicList, "topics", "", "Kafka topics")
   flag.StringVar(&c.Kafka.ConsumerGroup, "group", "", "Kafka consumer group name")
