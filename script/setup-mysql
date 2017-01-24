@@ -1,0 +1,12 @@
+#!/bin/bash
+
+until (mysql -h 127.0.0.1 -P 3306 -u root -e "SELECT 1" &> /dev/null)
+do
+  echo "Waiting for MySQL..."
+  sleep 1
+done
+
+if mysql -h 127.0.0.1 -P 3306 -u root -e "CREATE DATABASE IF NOT EXISTS kafka_mysql_test;"
+then
+  echo "Bootstrapping MySQL is done."
+fi

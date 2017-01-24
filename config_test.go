@@ -8,12 +8,12 @@ import (
 
 func TestParse(t *testing.T) {
   config := NewConfig()
-  config.BrokerList = "broker,broker2,broker3"
-  config.ZookeeperList = "zookeeper,zookeeper2"
-  config.TopicList = "topic,another_topic"
-  config.FieldList = "fielda,fieldb,fieldc"
+  config.brokerList = "broker,broker2,broker3"
+  config.zookeeperList = "zookeeper,zookeeper2"
+  config.topicList = "topic,another_topic"
+  config.fieldList = "fielda,fieldb,fieldc"
 
-  config.Parse()
+  config.parse()
 
   assert.Equal(t, []string{"broker", "broker2", "broker3"}, config.Kafka.Brokers)
   assert.Equal(t, []string{"zookeeper", "zookeeper2"}, config.Kafka.Zookeepers)

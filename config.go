@@ -6,6 +6,8 @@ import (
   "fmt";
   "flag";
   "strings";
+  "io/ioutil";
+  "encoding/json";
 )
 
 var Version = "0.1.0"
@@ -45,43 +47,57 @@ func (mc *MysqlConfig) connectionString() string {
 }
 
 type KafkaConfig struct {
-  Brokers []string
-  Zookeepers []string
-  Topics []string
-  ConsumerGroup string
-  InitialOffset string
-  FetchSize int
+  Brokers       []string
+  Zookeepers    []string
+  Topics        []string
+  ConsumerGroup string   `json:"consumer_group"`
+  InitialOffset string   `json:"initial_offset"`
+  FetchSize     int      `json:"fetch_size"`
 }
 
 type Config struct {
-  BrokerList string
-  ZookeeperList string
-  TopicList string
-  FieldList string
-  Fields []string
-  ConnectionTimeout int
-  UpsertInterval int
-  UpsertSize int
-  MaxRetries int
+  ConfigFile        string
+  brokerList        string
+  zookeeperList     string
+  topicList         string
+  fieldList         string
+  Fields            []string
+  ConnectionTimeout int       `json:"connection_timeout"`
+  UpsertInterval    int       `json:"upsert_interval"`
+  UpsertSize        int       `json:"upsert_size"`
+  MaxRetries        int       `json:"max_retries"`
   Mysql *MysqlConfig
   Kafka *KafkaConfig
 }
 
-func (c *Config) Parse() {
-  c.Kafka.Brokers = strings.Split(c.BrokerList, ",")
-  c.Kafka.Zookeepers = strings.Split(c.ZookeeperList, ",")
-  c.Kafka.Topics = strings.Split(c.TopicList, ",")
-  c.Fields = strings.Split(c.FieldList, ",")
+func (c *Config) parse() {
+  c.Kafka.Brokers = strings.Split(c.brokerList, ",")
+  c.Kafka.Zookeepers = strings.Split(c.zookeeperList, ",")
+  c.Kafka.Topics = strings.Split(c.topicList, ",")
+  c.Fields = strings.Split(c.fieldList, ",")
 }
 
-func (c *Config) ParseFlags() {
-  flag.StringVar(&c.BrokerList, "brokers", "127.0.0.1:9092", "Kafka brokers")
-  flag.StringVar(&c.ZookeeperList, "zookeepers", "127.0.0.1:2181", "Zookeeper nodes")
-  flag.StringVar(&c.TopicList, "topics", "", "Kafka topics")
+func (c *Config) load() error {
+  if c.ConfigFile == "" {
+    return nil
+  }
+
+  data, err := ioutil.ReadFile(c.ConfigFile)
+  if err != nil {
+    return err
+  }
+  return json.Unmarshal(data, &c)
+}
+
+func (c *Config) ParseFlags() error {
+  flag.StringVar(&c.ConfigFile, "conf", "", "Config file")
+  flag.StringVar(&c.brokerList, "brokers", "127.0.0.1:9092", "Kafka brokers")
+  flag.StringVar(&c.zookeeperList, "zookeepers", "127.0.0.1:2181", "Zookeeper nodes")
+  flag.StringVar(&c.topicList, "topics", "", "Kafka topics")
   flag.StringVar(&c.Kafka.ConsumerGroup, "group", "", "Kafka consumer group name")
   flag.StringVar(&c.Kafka.InitialOffset, "initial-offset", "newest", "Kafka consumer initial offset")
   flag.IntVar(&c.Kafka.FetchSize, "fetch-size", 1048576, "Kafka consumer fetch size - bytes")
-  flag.StringVar(&c.FieldList, "fields", "", "Event fields to import")
+  flag.StringVar(&c.fieldList, "fields", "", "Event fields to import")
   flag.StringVar(&c.Mysql.Host, "mysql-host", "127.0.0.1", "Mysql host")
   flag.IntVar(&c.Mysql.Port, "mysql-port", 3306, "Mysql host")
   flag.StringVar(&c.Mysql.User, "mysql-user", "root", "Mysql user")
@@ -93,5 +109,7 @@ func (c *Config) ParseFlags() {
   flag.IntVar(&c.UpsertSize, "upsert-size", 4000, "Number of events to upsert in one query")
   flag.IntVar(&c.MaxRetries, "max-retries", 3, "Retry count before skipping to next batch")
   flag.Parse()
-  c.Parse()
+
+  c.parse()
+  return c.load()
 }

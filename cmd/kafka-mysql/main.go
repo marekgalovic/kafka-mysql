@@ -6,7 +6,10 @@ import (
 
 func main() {
   config := kafkamysql.NewConfig()
-  config.ParseFlags()
+  err := config.ParseFlags()
+  if err != nil {
+    kafkamysql.Logger.Fatal(err)
+  }
   kafkamysql.Logger.Printf("Version: %s", kafkamysql.Version)
 
   consumer, err := kafkamysql.NewConsumer(config)

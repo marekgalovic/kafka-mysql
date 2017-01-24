@@ -70,6 +70,7 @@ func (c *Consumer) clusterConfig() *cluster.Config {
   clusterConfig.Consumer.Offsets.Initial = c.initialOffset()
   clusterConfig.Consumer.Fetch.Default = int32(c.config.Kafka.FetchSize)
   clusterConfig.Consumer.Return.Errors = true
+  clusterConfig.Group.Return.Notifications = true
 
   return clusterConfig
 }
